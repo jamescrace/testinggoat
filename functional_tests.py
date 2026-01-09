@@ -36,7 +36,8 @@ class NewVisitorTest(unittest.TestCase):
 
         table = self.browser.find_element(By.ID, "id_list_table")
         rows = table.find_elements(By.TAG_NAME, "tr")
-        self.assertTrue(any(row.text == "1: buy milk" for row in rows))
+        self.assertTrue(any(row.text == "1: buy milk" for row in rows),
+                        "New to-do item did not appear in table", )
 
         # user enters "drink milk" in the box
         self.fail("Finish the test!")
@@ -44,6 +45,7 @@ class NewVisitorTest(unittest.TestCase):
         # user sees page refresh, list contains both todo items"
 
         # user quits.
+
 
 if __name__ == "__main__":
     unittest.main()
