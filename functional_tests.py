@@ -13,6 +13,11 @@ class NewVisitorTest(unittest.TestCase):
     def tearDown(self):
         self.browser.quit()
 
+    def check_for_row_in_list_table(self, row_text):
+        table = self.browser.find_element(By.ID, "id_list_table")
+        rows = table.find_elements(By.TAG_NAME, "tr")
+        self.assertIn(row_text, [row.text for row in rows])
+
     def test_can_start_a_todo_list(self):
         # user wants to use the Todo app
         self.browser.get("http://localhost:8000")
@@ -33,16 +38,17 @@ class NewVisitorTest(unittest.TestCase):
         # user sees page refresh, list contains "buy milk"
         inputbox.send_keys(Keys.ENTER)
         time.sleep(1)
-
-        table = self.browser.find_element(By.ID, "id_list_table")
-        rows = table.find_elements(By.TAG_NAME, "tr")
-        self.assertTrue(any(row.text == "1: buy milk" for row in rows),
-                        "New to-do item did not appear in table", )
+        self.check_for_row_in_list_table("1: buy milk")
 
         # user enters "drink milk" in the box
-        self.fail("Finish the test!")
+        inputbox = self.browser.find_element(By.ID, "id_new_item")
+        inputbox.send_keys("drink milk")
+        inputbox.send_keys(Keys.ENTER)
+        time.sleep(1)
 
         # user sees page refresh, list contains both todo items"
+        self.check_for_row_in_list_table("2: drink milk")
+        self.check_for_row_in_list_table("1: buy milk")
 
         # user quits.
 
