@@ -1,26 +1,38 @@
 import time
 import unittest
 
+from django.test import LiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
+MAX_WAIT = 5
 
-class NewVisitorTest(unittest.TestCase):
+
+class NewVisitorTest(LiveServerTestCase):
     def setUp(self):
         self.browser = webdriver.Firefox()
 
     def tearDown(self):
         self.browser.quit()
 
-    def check_for_row_in_list_table(self, row_text):
-        table = self.browser.find_element(By.ID, "id_list_table")
-        rows = table.find_elements(By.TAG_NAME, "tr")
-        self.assertIn(row_text, [row.text for row in rows])
+    def wait_for_row_in_list_table(self, row_text):
+        start_time = time.time()
+        while True:
+            from selenium.common import WebDriverException
+            try:
+                table = self.browser.find_element(By.ID, "id_list_table")
+                rows = table.find_elements(By.TAG_NAME, "tr")
+                self.assertIn(row_text, [row.text for row in rows])
+                return
+            except (AssertionError, WebDriverException):
+                if time.time() - start_time > MAX_WAIT:
+                    raise
+                time.sleep(0.5)
 
     def test_can_start_a_todo_list(self):
         # user wants to use the Todo app
-        self.browser.get("http://localhost:8000")
+        self.browser.get(self.live_server_url)
 
         # user notices the page title and header mention to-do lists
         self.assertIn("To-Do", self.browser.title)
@@ -37,18 +49,16 @@ class NewVisitorTest(unittest.TestCase):
 
         # user sees page refresh, list contains "buy milk"
         inputbox.send_keys(Keys.ENTER)
-        time.sleep(1)
-        self.check_for_row_in_list_table("1: buy milk")
+        self.wait_for_row_in_list_table("1: buy milk")
 
         # user enters "drink milk" in the box
         inputbox = self.browser.find_element(By.ID, "id_new_item")
         inputbox.send_keys("drink milk")
         inputbox.send_keys(Keys.ENTER)
-        time.sleep(1)
 
         # user sees page refresh, list contains both todo items"
-        self.check_for_row_in_list_table("2: drink milk")
-        self.check_for_row_in_list_table("1: buy milk")
+        self.wait_for_row_in_list_table("2: drink milk")
+        self.wait_for_row_in_list_table("1: buy milk")
 
         # user quits.
 
