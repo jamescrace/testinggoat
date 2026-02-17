@@ -1,5 +1,5 @@
 from django.test import TestCase
-
+import lxml.html
 from lists.models import Item, List
 
 
@@ -14,8 +14,10 @@ class HomePageTest(TestCase):
 
     def test_renders_input_form(self):
         response = self.client.get("/")
-        self.assertContains(response, '<form action="/lists/new" method="POST">')
-        self.assertContains(response, '<input id="id_new_item" name="item_text"')
+        parsed = lxml.html.fromstring(response.content)
+        [form] = parsed.cssselect("form[method=POST]")
+        self.assertEqual(form.get("action"), "/lists/new")
+        [input] = form.cssselect("input[name=item_text]")
 
 
 class ListItemModelTest(TestCase):
@@ -51,20 +53,24 @@ class ListViewTest(TestCase):
     def test_renders_input_form(self):
         mylist = List.objects.create()
         response = self.client.get(f"/lists/{mylist.id}/")
-        self.assertContains(response, f'<form action="/lists/{mylist.id}/add_item" method="POST">')
-        self.assertContains(response, '<input id="id_new_item" name="item_text"')
+        parsed = lxml.html.fromstring(response.content)
+        [form] = parsed.cssselect("form[method=POST]")
+        self.assertEqual(form.get("action"), f"/lists/{mylist.id}/add_item")
+        [input] = form.cssselect("input[name=item_text]")
+        inputs = form.cssselect("input")
+        self.assertIn("item_text", [input.get("name") for input in inputs])
 
-    def test_displays_only_items_for_that_list(self):
-        correct_list = List.objects.create()
-        Item.objects.create(text="itemey 1", list=correct_list)
-        Item.objects.create(text="itemey 2", list=correct_list)
-        other_list = List.objects.create()
-        Item.objects.create(text="not in list", list=other_list)
+def test_displays_only_items_for_that_list(self):
+    correct_list = List.objects.create()
+    Item.objects.create(text="itemey 1", list=correct_list)
+    Item.objects.create(text="itemey 2", list=correct_list)
+    other_list = List.objects.create()
+    Item.objects.create(text="not in list", list=other_list)
 
-        response = self.client.get(f"/lists/{correct_list.id}/")
-        self.assertContains(response, "itemey 1")
-        self.assertContains(response, "itemey 2")
-        self.assertNotContains(response, "not in list")
+    response = self.client.get(f"/lists/{correct_list.id}/")
+    self.assertContains(response, "itemey 1")
+    self.assertContains(response, "itemey 2")
+    self.assertNotContains(response, "not in list")
 
 
 class NewListTest(TestCase):
