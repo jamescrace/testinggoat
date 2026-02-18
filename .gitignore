@@ -25,4 +25,4 @@ db.sqlite3
 .claude/
 
 # Misc
-identifier.sqlite
+identifier.sqlitesrc/db.sqlite3
