@@ -11,4 +11,10 @@ WORKDIR /src
 
 ENV PATH="/.venv/bin:$PATH"
 
+RUN python manage.py collectstatic --noinput
+
+ENV DJANGO_DEBUG_FALSE=1
+RUN adduser --uid 1234 nonroot --disabled-password --gecos "" && chown -R nonroot:nonroot /src
+USER nonroot
+
 CMD ["gunicorn", "--bind", ":8888", "superlists.wsgi:application"]

@@ -1,18 +1,30 @@
 IMAGE_NAME := superlists
 PORT := 8888
+DJANGO_SECRET_KEY ?= secret-key-for-local-docker
+
+container.db.sqlite3:
+	touch container.db.sqlite3
+	sudo chown 1234 container.db.sqlite3
+	sudo chmod g+rw container.db.sqlite3
 
 build:
 	docker build -t $(IMAGE_NAME) .
 
-run: build
+run: container.db.sqlite3 build
 	docker run \
 		-p $(PORT):$(PORT) \
-		--mount type=bind,source="$(PWD)/src/db.sqlite3",target=/src/db.sqlite3 \
+		-e DJANGO_SECRET_KEY=DJANGO_SECRET_KEY \
+		-e DJANGO_ALLOWED_HOST=localhost \
+		-e DJANGO_DB_PATH=/home/nonroot/db.sqlite3 \
+		--mount type=bind,source="$(PWD)/container.db.sqlite3",target=/home/nonroot/db.sqlite3 \
 		-it $(IMAGE_NAME)
 
-test: build
+test: container.db.sqlite3 build
 	docker run \
-		--mount type=bind,source="$(PWD)/src/db.sqlite3",target=/src/db.sqlite3 \
+		-e DJANGO_SECRET_KEY=DJANGO_SECRET_KEY \
+		-e DJANGO_ALLOWED_HOST=localhost \
+		-e DJANGO_DB_PATH=/home/nonroot/db.sqlite3 \
+		--mount type=bind,source="$(PWD)/container.db.sqlite3",target=/home/nonroot/db.sqlite3 \
 		-it $(IMAGE_NAME) \
 		python manage.py test
 
