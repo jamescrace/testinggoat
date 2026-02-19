@@ -1,12 +1,14 @@
 FROM python:3.14-slim
 
-RUN python -m venv /venv
-ENV PATH="/venv/bin:$PATH"
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-RUN pip install "django<6"
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
 COPY src /src
 
 WORKDIR /src
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8888"]
+ENV PATH="/.venv/bin:$PATH"
+
+CMD ["gunicorn", "--bind", ":8888", "superlists.wsgi:application"]
