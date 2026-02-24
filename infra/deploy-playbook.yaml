@@ -1,0 +1,26 @@
+- hosts: all
+  tasks:
+    - name: Install docker
+      ansible.builtin.apt:
+        name: docker.io
+        state: latest
+        update_cache: true
+      become: true
+
+    - name: Add our user to docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+      become: true
+
+    - name: Reset ssh for the user/group change to take effect
+      ansible.builtin.meta: reset_connection
+
+    - name: Run test container
+      community.docker.docker_container:
+        name: testcontainer
+        state: started
+        image: busybox
+        command: echo hello world
+      become: true

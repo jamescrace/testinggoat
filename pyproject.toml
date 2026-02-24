@@ -10,3 +10,9 @@ dependencies = [
     "selenium>=4.38.0",
     "whitenoise>=6.11.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ansible>=13.3.0",
+    "docker>=7.1.0",
+]
