@@ -22,7 +22,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 if "DJANGO_DEBUG_FALSE" in os.environ:
     DEBUG = False
     SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
-    ALLOWED_HOSTS = [os.environ['DJANGO_ALLOWED_HOST']]
+    ALLOWED_HOSTS = [os.environ['DJANGO_ALLOWED_HOSTS']]
+    CSRF_TRUSTED_ORIGINS = [os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '')]
     db_path = os.environ["DJANGO_DB_PATH"]
 else:
     DEBUG = True

@@ -14,7 +14,7 @@ class NewVisitorTest(StaticLiveServerTestCase):
     def setUp(self):
         self.browser = webdriver.Firefox()
         if test_server := os.environ.get("TEST_SERVER"):
-            self.live_server_url = "http://" + test_server
+            self.live_server_url = "https://" + test_server
 
     def tearDown(self):
         self.browser.quit()
