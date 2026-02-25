@@ -1,38 +1,14 @@
-import os
-import time
 import unittest
 
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from selenium import webdriver
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
+
+from .base import FunctionalTest
 
 MAX_WAIT = 5
 
 
-class NewVisitorTest(StaticLiveServerTestCase):
-    def setUp(self):
-        self.browser = webdriver.Firefox()
-        if test_server := os.environ.get("TEST_SERVER"):
-            self.live_server_url = "https://" + test_server
-
-    def tearDown(self):
-        self.browser.quit()
-
-    def wait_for_row_in_list_table(self, row_text):
-        start_time = time.time()
-        while True:
-            from selenium.common import WebDriverException
-            try:
-                table = self.browser.find_element(By.ID, "id_list_table")
-                rows = table.find_elements(By.TAG_NAME, "tr")
-                self.assertIn(row_text, [row.text for row in rows])
-                return
-            except (AssertionError, WebDriverException):
-                if time.time() - start_time > MAX_WAIT:
-                    raise
-                time.sleep(0.5)
-
+class NewVisitorTest(FunctionalTest):
     def test_can_start_a_todo_list(self):
         # user wants to use the Todo app
         self.browser.get(self.live_server_url)
@@ -62,7 +38,6 @@ class NewVisitorTest(StaticLiveServerTestCase):
         # user sees page refresh, list contains both todo items"
         self.wait_for_row_in_list_table("2: drink milk")
         self.wait_for_row_in_list_table("1: buy milk")
-
         # user quits.
 
     def test_multiple_users_can_start_lists_at_different_urls(self):
@@ -101,6 +76,8 @@ class NewVisitorTest(StaticLiveServerTestCase):
         self.assertNotIn("Buy peacock feathers", page_text)
         self.assertIn("Buy milk", page_text)
 
+
+class LayoutAndStylingTest(FunctionalTest):
     def test_layout_and_styling(self):
         self.browser.get(self.live_server_url)
         self.browser.set_window_size(1024, 768)
@@ -120,6 +97,24 @@ class NewVisitorTest(StaticLiveServerTestCase):
             512,
             delta=10
         )
+
+
+class ItemValidationTest(FunctionalTest):
+    def test_cannot_add_empty_list_items(self):
+        # Edith goes to the home page and accidentally tries to submit
+        # an empty list item. She hits Enter on the empty input box
+
+        # The home page refreshes, and there is an error message saying
+        # that list items cannot be blank
+
+        # She tries again with some text for the item, which now works
+
+        # Perversely, she now decides to submit a second blank list item
+
+        # She receives a similar warning on the list page
+
+        # And she can correct it by filling some text in
+        self.fail("write me!")
 
 
 if __name__ == "__main__":
