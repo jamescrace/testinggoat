@@ -4,6 +4,7 @@ import unittest
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
+from selenium.common import WebDriverException
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
@@ -28,6 +29,16 @@ class FunctionalTest(StaticLiveServerTestCase):
                 rows = table.find_elements(By.TAG_NAME, "tr")
                 self.assertIn(row_text, [row.text for row in rows])
                 return
+            except (AssertionError, WebDriverException):
+                if time.time() - start_time > MAX_WAIT:
+                    raise
+                time.sleep(0.5)
+
+    def wait_for(self, fn):
+        start_time = time.time()
+        while True:
+            try:
+                return fn()
             except (AssertionError, WebDriverException):
                 if time.time() - start_time > MAX_WAIT:
                     raise
