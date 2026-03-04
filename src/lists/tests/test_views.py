@@ -1,4 +1,7 @@
+from unittest import skip
+
 from django.test import TestCase
+from django.utils.html import escape
 import lxml.html
 from lists.models import Item, List
 
@@ -29,6 +32,13 @@ class NewListTest(TestCase):
         new_list = List.objects.get()
         self.assertRedirects(response, f"/lists/{new_list.id}/")
 
+    def test_validation_errors_are_sent_back_to_home_page_template(self):
+        response = self.client.post("/lists/new", data={"item_text": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "home.html")
+        expected_error = "You can't have an empty list item"
+        self.assertContains(response, escape(expected_error))
+
 
 class ListViewTest(TestCase):
     def test_uses_list_template(self):
@@ -36,12 +46,12 @@ class ListViewTest(TestCase):
         response = self.client.get(f"/lists/{mylist.id}/")
         self.assertTemplateUsed(response, "list.html")
 
-    def test_renders_input_form(self):
+    def test_POST_renders_input_form(self):
         mylist = List.objects.create()
         response = self.client.get(f"/lists/{mylist.id}/")
         parsed = lxml.html.fromstring(response.content)
         [form] = parsed.cssselect("form[method=POST]")
-        self.assertEqual(form.get("action"), f"/lists/{mylist.id}/add_item")
+        self.assertEqual(form.get("action"), f"/lists/{mylist.id}/")
         inputs = form.cssselect("input")
         self.assertIn("item_text", [input.get("name") for input in inputs])
 
@@ -57,14 +67,12 @@ class ListViewTest(TestCase):
         self.assertContains(response, "itemey 2")
         self.assertNotContains(response, "not in list")
 
-
-class NewItemTest(TestCase):
     def test_can_save_a_POST_request_to_an_existing_list(self):
         other_list = List.objects.create()
         correct_list = List.objects.create()
 
         self.client.post(
-            f"/lists/{correct_list.id}/add_item",
+            f"/lists/{correct_list.id}/",
             data={"item_text": "A new item for an existing list"},
         )
 
@@ -78,15 +86,8 @@ class NewItemTest(TestCase):
         correct_list = List.objects.create()
 
         response = self.client.post(
-            f"/lists/{correct_list.id}/add_item",
+            f"/lists/{correct_list.id}/",
             data={"item_text": "A new item for an existing list"},
         )
 
         self.assertRedirects(response, f"/lists/{correct_list.id}/")
-
-    def test_validation_errors_are_sent_back_to_home_page_template(self):
-        response = self.client.post("/lists/new", data={"item_text": ""})
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "home.html")
-        expected_error = "You can't have an empty list item"
-        self.assertContains(response, expected_error)
