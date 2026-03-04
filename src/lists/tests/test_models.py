@@ -1,5 +1,3 @@
-from ansible_collections.hitachivantara.vspone_block.plugins.module_utils.common.hv_exceptions import \
-    ValidationException
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
@@ -50,3 +48,7 @@ class ListItemModelTest(TestCase):
         self.client.post("/lists/new", data={"item_text": ""})
         self.assertEqual(Item.objects.count(), 0)
         self.assertEqual(List.objects.count(), 0)
+
+    def test_get_absolute_url(self):
+        mylist = List.objects.create()
+        self.assertEqual(mylist.get_absolute_url(), f"/lists/{mylist.id}/")
