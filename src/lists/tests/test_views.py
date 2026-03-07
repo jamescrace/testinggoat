@@ -6,7 +6,7 @@ from django.utils import html
 from django.utils.html import escape
 import lxml.html
 
-from lists.forms import EMPTY_ITEM_ERROR
+from lists.forms import EMPTY_ITEM_ERROR, DUPLICATE_ITEM_ERROR
 from lists.models import Item, List
 
 
@@ -122,7 +122,6 @@ class ListViewTest(TestCase):
         response = self.post_invalid_input()
         self.assertContains(response, html.escape(EMPTY_ITEM_ERROR))
 
-    @skip
     def test_duplicate_item_validation_errors_end_up_on_lists_page(self):
         list1 = List.objects.create()
         Item.objects.create(list=list1, text="textey")
@@ -131,7 +130,7 @@ class ListViewTest(TestCase):
             f"/lists/{list1.id}/",
             data={"text": "textey"},
         )
-        expected_error_message = html.escape("You've already got that in your list")
+        expected_error_message = html.escape(DUPLICATE_ITEM_ERROR)
         self.assertContains(response, expected_error_message)
         self.assertTemplateUsed(response, "list.html")
         self.assertEqual(Item.objects.count(), 1)

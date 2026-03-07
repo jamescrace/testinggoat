@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect
 
-from lists.forms import ItemForm
+from lists.forms import ItemForm, ExistingListItemForm
 from lists.models import Item, List
 
 
@@ -11,12 +11,12 @@ def home_page(request):
 
 def view_list(request, list_id):
     our_list = List.objects.get(id=list_id)
-    form = ItemForm()
+    form = ExistingListItemForm(for_list=our_list)
 
     if request.method == "POST":
-        form = ItemForm(request.POST)
+        form = ExistingListItemForm(for_list=our_list, data=request.POST)
         if form.is_valid():
-            form.save(for_list=our_list)
+            form.save()
             return redirect(our_list)
     return render(request, "list.html", {"list": our_list, "form": form})
 

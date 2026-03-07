@@ -2,6 +2,8 @@ import unittest
 
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
+
+from lists.forms import DUPLICATE_ITEM_ERROR
 from .base import FunctionalTest
 
 MAX_WAIT = 5
@@ -63,7 +65,6 @@ class ItemValidationTest(FunctionalTest):
         self.wait_for(
             lambda: self.assertEqual(
                 self.browser.find_element(By.CSS_SELECTOR, ".invalid-feedback").text,
-                "You've already got that on your list!"
+                DUPLICATE_ITEM_ERROR
             )
         )
-
